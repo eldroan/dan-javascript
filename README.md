@@ -190,7 +190,7 @@ Utilizando process recuperar los argumentos de consola accediendo a proces.argv
 ---
 
 > Ejercicios
-> Si querés resolver los ejercicios pensados para esta sección podes dirijirte a la hoja de [ejercicios-00](ejercicios/ejercicios-00)
+> Si querés resolver los ejercicios pensados para esta sección podes dirijirte a la hoja de [ejercicios-00](ejercicios/ejercicios-00.md)
 
 ---
 

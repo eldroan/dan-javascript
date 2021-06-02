@@ -1,6 +1,6 @@
 ## Ejercicios - Hola mundo
 
-> Esta guía esta desarrollada en base a los conceptos presentados en la seccion ['0 - Hola mundo'](../README#0-hola-mundo)
+> Esta guía esta desarrollada en base a los conceptos presentados en la seccion ['0 - Hola mundo'](../README.md#0-hola-mundo)
 
 #### 0 - Disculpe, tiene hora?
 
