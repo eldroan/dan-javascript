@@ -23,7 +23,7 @@ Para instalar node basta con dirigirnos a [https://nodejs.org/es/](https://nodej
 Para comprobar si se instalo correctamente abrimos alguna terminal y ejecutamos
 
 ```bash
-node -v
+$ node -v
 ```
 
 Deberiamos ver una respuesta indicando el numero de version de node indicandonos que todo salio bien
@@ -194,31 +194,97 @@ Utilizando process recuperar los argumentos de consola accediendo a proces.argv
 
 ---
 
-<!-- ## 1 - Más práctica de Javascript
+## 1 - Funciones y asincronía en javascript
+
+// TODO
+//sintaxis
+// first class citizen
+//Non-blocking I/O by default - Event driven.
+//
+
+## 2 - Manipulando objetos y arrays
 
 #### Objetos
+
 // TODO
 
 #### Operaciones sobre arrays
+
 // TODO
 
 #### Desestructuracion
+
 // TODO
 
-#### Funciones y asincronía en javscript
-// TODO
+## 3 - Potenciando node
 
+#### NPM
 
-## 2 - Potenciando node
+Hasta ahora solamente hemos usado las herramientas provistas por NodeJS pero nos estamos perdiendo de una de las ventajas mas grandes de javascript, su extensa comunidad y la gran cantidad de librerias de terceros a nuestra disposición.
 
-####  Importando modulos  con 'require'
+Para ayudarnos a encontrar y administrar estas dependencias NodeJS, por defecto, incluye un sistema de gestión de paques llamado NPM (Node Package Manager)
+
+Solo teniendo node instalado, desde una terminal, podemos acceder a el
+
+```bash
+$ npm -v
+```
+
+Todos nuestros ejercicios implicaban crear un archivo con extensión `.js` y ejecutarlo mediante el comando `node archivo.js`. Si bien puede ser suficiente para scripts sencillos, para desarrollar aplicaciones complejas que necesitan de librerías externas en versiones especificas empezamos a tener problemas.
+
+Utilizando npm podemos generar una estructura de proyecto para nuestra aplicación mediante el comando `npm init`
+
+```bash
+$ mkdir mi-proyecto && cd mi-proyecto // Creamos una carpeta y navegamos dentro
+$ npm init
+```
+
+Al ejecutar el comando `init` la utilizadad de npm nos guiará paso a paso en la creación de un archivo `package.json`.
+
+![](imagenes/04-npm-init.png)
+
+En el queda descrito el nombre del proyecto, la versión y otras caracteristicas de las cuales, sin duda la mas importante, es el registro de las dependencias necesarias para ejecutar nuestro código.
+
+#### Agregando librerias de terceros
+
+Como ya mencionamos, existe una gran cantidad de librerias de terceros listas para ser utilizadas en nuestro código, por ejemplo, podemos ver algunas de ellas en el repositorio [awasome-javascript](https://github.com/sorrycc/awesome-javascrip) que se dedica a recolectar y catalogarlas.
+
+Para agregar una libreria, desde una terminal en el directorio donde se encuentra el `package.json`, debemos ejecutar
+
+```bash
+$ npm i nombre-de-libreria
+```
+
+Luego de agregar una librería al proyecto el `package.json` habrá agregado una entrada dentro de la key `dependencies`.
+
+Algunas librerias no son necesarias para ejecutar la aplicación pero si para facilitar el desarrollo (ej: framework de testing unitario) y para esto npm tambien nos deja instarlarlas utilizando
+
+```bash
+$ npm i nombre-de-libreria -D
+```
+
+Estas dependencias tambien se agregan al `package.json` pero dentro de la entrada `devDependencies`
+
+#### El directorio node-modules
+
+Si nos descargamos un proyecto que utiliza npm, por ejemplo desde github, gracias a este `package.json` simplemente tenemos que ejecutar `npm i` para descargar las dependencias requeridas. Estas dependencias se guardan dentro de un directorio llamado `node-modules`, si es la primera vez que se descargan tambien se generá un archivo denominado `package-lock.json` el cual indica las versiones de los paquetes que se descargaron y si este esta versionado permite que todos los que descarguen el proyecto utilicen las mismas versiones de las dependecias.
+
+#### Importando módulos en nuestro código
+
+NodeJS utiliza la sintaxis `require('nombre-del-modulo')` para cargar nuestras dependencias, esta función devuelve un objeto que contiene las funcionalidades que el modulo exporta es por esto que si, por ejemplo, estamos importando el modugo `fs` (file system) incluido en nodejs se suele hacer de la siguiente manera
+
+```js
+const fs = require("fs");
+```
+
+La misma sintaxis aplica a las librerias de terceros, por ejemplo para utilizar la librería [dayjs](https://github.com/iamkun/dayjs) que nos facilita el manejo de fechas primero ejecutamos `npm i dayjs` para agregar y descargar la dependecia y luego para utilizarla solo hacemos
+
+```js
+const dayjs = require("dayjs");
+```
+
+## 4 - API usando NodeJS y Express
+
+#### Express
+
 //TODO
-
-#### Agregando libs externas usando NPM sumando npm
-//TODO
-
-## 3 - API usando NodeJS y Express
-
-####  Express
-//TODO
- -->
