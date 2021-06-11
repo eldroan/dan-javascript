@@ -196,11 +196,109 @@ Utilizando process recuperar los argumentos de consola accediendo a proces.argv
 
 ## 1 - Funciones y asincronía en javascript
 
-// TODO
-//sintaxis
-// first class citizen
-//Non-blocking I/O by default - Event driven.
-//
+### Definición
+
+Las funciones existen en casi todos los lenguajes de programación modernos, nos permiten encapsular comportamiento y reutilizar codigo. 
+
+```js
+function saludador(nombre) {
+	return `Hola ${nombre}!`;
+}
+
+const greeter = function(name) {
+return `Hello ${name}!`;
+}
+
+// Invocaciones
+saludador("Ricardo");
+greeter("Richard");
+```
+
+Desde **ES6** también declarar nuestras funciones con la sintaxis de *funciones flecha*
+
+```js
+const saludador = (nombre) => {
+	return `Hola ${nombre}!`;
+}
+
+// Podemos comprimir quitando el return y los {}
+const saludador = (nombre) => `Hola ${nombre}!`;
+
+// Si solo recibe un parametro también podemos quitar el () 
+const saludador = nombre => `Hola ${nombre}!`;
+
+// Si no recibe parametros tenemos que usar ()
+const saludador = () => `Hola Extraño!`;
+
+```
+
+### Funciones como first class citizens
+
+En javascript las funciones van un paso mas alla, se consideran 'first-class citizen' (o ciudadanos de primera clase), esto quiere decir que son tratadas como cualquier otra variable. Por ejemplo, una funcion puede recibir otra funcion como parametros, retornar una funcion y que esta sea luego asignada a una variable.
+
+```js
+// Asignando funciones a variables
+const f1 = function foo() { console.log("foo"); };
+const f2 = function () { console.log("anonima"); };
+const f3 = () => console.log("anonima");
+
+// Declarando funciones y ejecutandolas inmediatamente (se asigna el resultado)
+const hola = function () { return "hola"} ()
+const chau = ( () => "chau" )() // En este caso tenemos que agregar parentesis extras
+
+// Funciones como parametros
+const sumar = (a,b) => a + b;
+const operar = (operacion, n1, n2) => console.log(operacion(n1,n2))
+operar(sumar, 1, 2) // Imprime: 3
+
+// Funciones que retornan funciones (también llamadas thunks)
+const restar = (n1) => (n2) => console.log(n1 - n2)
+restar(10)(8) // Imprime: 2
+
+```
+
+### Clausuras
+
+Un detalle a mencionar es que javascript, a diferencia de lenguajes como java, no ofrece una manera nativa de marcar funciones 'privadas'. Pero nos permite simular ese comportamiento mediante [clausuras](https://developer.mozilla.org/es/docs/Web/JavaScript/Closures)
+
+Una clausura  es una funcion que permite acceder al ámbito de una función exterior desde una función interior. En JavaScript, las clausuras se crean cada vez que una función es creada.
+
+Veamos este ejemplo
+
+```js
+const saludar = (() => {
+  const componerNombre = (n, a) => `${n} ${a}`;
+  
+  return (nombre,apellido) => {
+  	const nombreApellido = componerNombre(nombre, apellido);
+	console.log(`Hola ${nombreApellido}`)  
+  };
+})(); 
+
+saludar("Ricardo", "Sanchez");  
+```
+
+Estamos definiendo una función y luego ejecutandola inmediatamente, esta retorna otra funcion que toma `nombre` y `apellido` de parametro y se asigna a la variable `saludar`. Ahora, desde la funcion `saludar` estamos haciendo referencia a la funcion interna `componerNombre` pero esta no puede ser accedida de forma externa, logrando un resultado similar al de las funciones privadas.
+
+### Asincronia en Javascript
+
+El motor de Javascript solo puede ejecutar una sola cosa a la vez, es un lenguaje de programación single-threaded (un hilo) y por lo tanto solo puede procesarse de a una instrucción.
+
+Esto nos impone una limitante al tratar de realizar operaciones que se extienden en el tiempo como consultar apis. Si nuestra función demora estaremos bloqueando el hilo principal y por lo tanto nada mas podra ejecutarse.
+
+Por ejemplo, desde la consola de desarrollador de chrome podemos ejecutar `while(true){}` y de esta manera tildar completamente la tab ya que no desocupamos el hilo para que la página siga funcionando.
+
+![](imagenes/chrometildado.gif)
+
+Ahora, acabamos de decir que nuestro javascript ejecuta en un unico hilo, por lo que no podemos recurrir a la programación **paralela** para solucionar nuestros problemas pero si a la programación **concurrente**
+
+![](imagenes/concurrency.png)
+
+JavaScript poseé un modelo de concurrencia basado en un "loop de eventos". Si bien este modelo es diferente al que estamos acostumbrados en lenguajes como Java y existen varios recursos dedicados a [explicar su funcionamiento](https://www.youtube.com/watch?v=8aGhZQkoFbQ) de momento nos alcanza con saber que es la estrategia para resolver tareas concurrentes.
+
+// promises
+// then catch
+// async await
 
 ## 2 - Manipulando objetos y arrays
 
@@ -245,9 +343,46 @@ Al ejecutar el comando `init` la utilizadad de npm nos guiará paso a paso en la
 
 En el queda descrito el nombre del proyecto, la versión y otras caracteristicas de las cuales, sin duda la mas importante, es el registro de las dependencias necesarias para ejecutar nuestro código.
 
+#### Creando un script de inicializacion de nuestro proyecto
+Si revisamos nuestro package.json vemos que se autogenero un tag `main` con el siguiente valor que simboliza el punto de entrada de nuestra aplicacion 
+
+```json
+"main": "index.js"
+```
+> Importante:
+> `npm init` no genero ningun archivo index.js asi que vas a tener que generarlo o cambiar el nombre al que tengas
+
+Antes para ejecutar nuestra aplicacion ejecutabamos el comando `node index.js`, al tener `main` definido podemos solo escribir `node .` y dejar que el punto de entrada se levante del `package.json`. Ahora desde npm tambien podemos definir `scripts` de ejecucion.
+
+Para crear script solo hay que asignarle una nombre, seguido del comando de consola a ejecutar, dentro de la key `scripts` del `package.json`. Luego para ejecutarlo desde la terminal lanzamos
+
+```bash
+$ npm run nombre-de-script
+```
+
+Generalmente en el package json se agrega un script con el nombre `start` que ejecuta nuestra aplicacion, por ejemplo
+
+```json
+{
+	"name": "mi-proyecto",
+	"version": "1.0.0",
+	"description": "Mi primer proyecto usando npm",
+	"main": "index.js",
+	"scripts": {
+		"start": "node index.js"
+	},
+	"author": "Leandro Amarillo",
+	"license": "ISC"
+}
+```
+
+De esta manera ejecutar `npm run start` lanza nuestra apliacion.
+
+Si bien este es un caso bastante trivial, utilizar scripts empieza a volverse muy util para proyectos que cuenten con tests (podriamos crear un script `test` que los ejecute),  cuando queremos modificar argumentos (ejemplo: variables de entorno) o si durante el desarrollo queremos utilizar alguna herramienta como [nodemon](https://www.npmjs.com/package/nodemon) (que veremos mas adelante).
+
 #### Agregando librerias de terceros
 
-Como ya mencionamos, existe una gran cantidad de librerias de terceros listas para ser utilizadas en nuestro código, por ejemplo, podemos ver algunas de ellas en el repositorio [awasome-javascript](https://github.com/sorrycc/awesome-javascrip) que se dedica a recolectar y catalogarlas.
+Como ya mencionamos, existe una gran cantidad de librerias de terceros listas para ser utilizadas en nuestro código, por ejemplo, podemos ver algunas de ellas en el repositorio [awesome-javascript](https://github.com/sorrycc/awesome-javascrip) que se dedica a recolectar y catalogarlas.
 
 Para agregar una libreria, desde una terminal en el directorio donde se encuentra el `package.json`, debemos ejecutar
 
@@ -283,8 +418,19 @@ La misma sintaxis aplica a las librerias de terceros, por ejemplo para utilizar 
 const dayjs = require("dayjs");
 ```
 
+##### require (commonJS) vs import (ES6)
+ Por default NodeJS utiliza la sintaxis de commonJS, para utilizar la sintaxis de ES6 que utilizaremos cuando veamos react a partir de NodeJS v12 podemos modificar el `package.json` agregando la key `"type": "module"` luego podemos reemplazar nuestros imports a la forma
+ 
+ ```js 
+ import dayjs from 'dayjs'
+```
+
+ Existen otras diferencias a la hora de generar nuestros propios modulos y detalles de implementacion de como se cargan que no vienen al caso en una guia introductoria. A partir de este momento se utilizara la sintaxis de ES6 para mantener la familiaridad para cuando veamos react a futuro.
+
 ## 4 - API usando NodeJS y Express
 
 #### Express
+
+#### Reiniciando nuestro servidor local cuando se modifican archivos
 
 //TODO
