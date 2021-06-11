@@ -282,7 +282,7 @@ Estamos definiendo una función y luego ejecutandola inmediatamente, esta retorn
 
 ### Asincronia en Javascript
 
-El motor de Javascript solo puede ejecutar una sola cosa a la vez, es un lenguaje de programación single-threaded (un hilo) y por lo tanto solo puede procesarse de a una instrucción.
+El runtime de Javascript solo puede ejecutar una sola cosa a la vez, es un lenguaje de programación single-threaded (un hilo) y por lo tanto solo puede procesarse de a una instrucción.
 
 Esto nos impone una limitante al tratar de realizar operaciones que se extienden en el tiempo como consultar apis. Si nuestra función demora estaremos bloqueando el hilo principal y por lo tanto nada mas podra ejecutarse.
 
@@ -294,7 +294,7 @@ Ahora, acabamos de decir que nuestro javascript ejecuta en un unico hilo, por lo
 
 ![](imagenes/concurrency.png)
 
-JavaScript poseé un modelo de concurrencia basado en un "loop de eventos". Si bien este modelo es diferente al que estamos acostumbrados en lenguajes como Java y existen varios recursos dedicados a [explicar su funcionamiento](https://www.youtube.com/watch?v=8aGhZQkoFbQ) de momento nos alcanza con saber que es la estrategia para resolver tareas concurrentes.
+Pero nosotros no ejecutamos solo javascript, ejecutamos javascript en un navegador o sobre nodejs y estos poseen un modelo de concurrencia basado en un "loop de eventos". Si bien este modelo es diferente al que estamos acostumbrados en lenguajes como Java y existen varios recursos dedicados a [explicar su funcionamiento](https://www.youtube.com/watch?v=8aGhZQkoFbQ) de momento nos alcanza con saber que es la estrategia para resolver tareas concurrentes.
 
 // promises
 // then catch
