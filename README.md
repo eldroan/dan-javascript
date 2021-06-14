@@ -296,10 +296,130 @@ Ahora, acabamos de decir que nuestro javascript ejecuta en un unico hilo, por lo
 
 Pero nosotros no ejecutamos solo javascript, ejecutamos javascript en un navegador o sobre nodejs y estos poseen un modelo de concurrencia basado en un "loop de eventos". Si bien este modelo es diferente al que estamos acostumbrados en lenguajes como Java y existen varios recursos dedicados a [explicar su funcionamiento](https://www.youtube.com/watch?v=8aGhZQkoFbQ) de momento nos alcanza con saber que es la estrategia para resolver tareas concurrentes.
 
-// promises
-// then catch
-// async await
+### Modelando la asincronía: Promesas con then/catch
+En Javascript, una  `Promise` es un objeto que *PUEDE* producir un valor en algun momento futuro. Se utilizan para representar la terminación o el fracaso de una operación asíncrona. Este objeto admite 3 estados: fulfilled (completada), rejected (rechazada), o pending (sin completar) y expone el metodo `then` que se llama cuando la promesa resuelve  y `catch` cuando se rechaza, ambos métodos reciben callbacks como parametros para manejar los datos o el error recibido.
 
+Dado que la mayoría de las personas consumen `promises` ya creadas, empezaremos primero por cómo consumirlas.
+
+Supongamos que tenemos un método `buscarDatosDeUsuario` que utiliza una api de internet para recurpar los datos de usuario, esta tarea no es instantanea ya que una consulta de red puede demorar varios segundos. Si nuestra funcion devuelve un objeto promise entonces podemos modelarlo de la siguiente manera
+
+```js
+buscarDatosDeUsuario()
+.then( usuario => console.log(`Hola ${usuario.nombre}!`))
+.catch( error => console.log(`No pudimos recuperar los datos. Razon: ${error}`))
+```
+
+El metodo `then` aplicado a una funcion devuelve otra promesa, esto nos permite encadenarlas. Siguiendo con nuestro ejemplo, supongamos que luego de recuperar los datos de un usuario tenemos que consultar en otra api las deudas que este posee, usando promesas encadenadas podriamos modelarlo de la siguiente manera
+
+```js
+buscarDatosDeUsuario()
+.then( usuario => buscarDeudasPendientes(usuario.cuil))
+.then( deuda => console.log(deuda.monto == 0 ? "No posee deudas" : `Debe $${deuda.monto}!`))
+.catch( error => console.log(`No pudimos recuperar los datos. Razon: ${error}`))
+```
+
+En un mundo sin promesas este tipo de operaciones encadenadas tendría que utilizar callbacks, por ejemplo
+
+```js
+const falloCallback = error => console.log(`No pudimos recuperar los datos. Razon: ${error}`);
+
+// En cada una pasamos los valores necesarios y
+// luego un callback de exito y uno de fallo
+buscarDatosDeUsuario( usuario => {
+	buscarDeudasPendientes(usuario.cuil, deuda => {
+		if(deuda.monto == 0) {
+			console.log("No posee deudas");
+		} else {
+			console.log(`Debe $${deuda.monto}!`);
+		}
+	},falloCallback);
+},falloCallback);
+```
+
+Esta estrategía tiene pobre legibilidad y empeora con cada tarea extra, ya que cada callback incrementa el nivel de anidamiento del código, pero cuenta con una ventaja. Debido a que los callbacks son funciones dentro de otras funciones podríamos usar clausuras para acceder a los resultados de las operaciones previas, cosa que utilizando then/catch no seria tan sencillo.
+
+```js
+const falloCallback = error => console.log(`No pudimos recuperar los datos. Razon: ${error}`);
+
+// En cada una pasamos los valores necesarios y
+// luego un callback de exito y uno de fallo
+buscarDatosDeUsuario( usuario => {
+	buscarDeudasPendientes(usuario.cuil, deuda => {
+		if(deuda.monto == 0) {
+			console.log(`No posee deudas. Felicitaciones ${usuario.nombre}`);
+		} else {
+			console.log(`Debe $${deuda.monto}! Muy mal ${usuario.nombre}`);
+		}
+	},falloCallback);
+},falloCallback);
+```
+
+Esto no es mucho una justificación para usarlos ya que desde ES6 existe una estrategía que soluciona este problema y además nos facilita trabajar con promesas en general.
+
+#### Promesas con async await
+
+Como mencionamos anteriormente las promesas son una manera de modelar el codigo asincrono, desde es6 se incluyen las keywords `async` y `await` para poder escribir código asincrono que utiliza promesas como si fuera código síncrono. 
+
+```js
+const tarea = async () => {
+	try {
+		const usuario = await buscarDatosDeUsuario();
+		const deuda = await buscarDeudasPendientes(usuario.cuil);
+	
+		if(deuda.monto == 0){
+			console.log(`No posee deudas. Felicitaciones ${usuario.nombre}`);
+		} else {
+			console.log(`Debe $${deuda.monto}! Muy mal ${usuario.nombre}`);
+		}
+	} catch (error) {
+		console.log(`No pudimos recuperar los datos. Razon: ${error}`);
+	}
+};
+tarea();
+```
+
+Si no fuera por las palabras reservadas `async` y `await` pareceria que `buscarDatosDeUsuario` y `buscarDeudasPendientes` son funciones sincronas cuando en realidad entre lineas pueden pasar varios segundos hasta que se ejecuten. Tambien el manejo de errores se movio a un bloque `try/catch` como si fuera un manejo de excepciones.
+ 
+La keyword `await` funciona haciendo que, de alguna manera, la ejecucion del código  'espere' hasta que la promesa se resuelva y luego continua retornando resultado de la promesa. 
+
+Sin entrar mucho en los detalles de como funciona podemos decir que `await`  permite que javascript continue ejecutando otros trabajos mientra la ejecución de nuestro codigo esta suspedido esperando a que se complete la promesa. 
+
+> TIP: No usar el bloque `finally` de un try/catch cuando se utiliza await en promesas. En caso de hacerlo veremos como el bloque finally se ejecutará varias veces, lo cual probablemente no sea el resultado esperado.
+
+Si bien esta sintaxis es mucho mas elegante y sencilla de leer que `.then(...)` tiene una restriccion muy importante de recordar
+
+```
+No se puede utilizar await en funciones regulares. Solo en funciones asincronicas.
+```
+
+Definir una función como asincronicas es tan sencillo como agregar la keyword `async` delante de nuestra declaración de funcion. Es por esto que en nuestro ejemplo definimos la función `tarea`.
+
+Si estamos utilizando NodeJS a partir de la v14.8 podemos 'saltarnos' esta restricción definiendo nuestros scripts como **módulos**, la forma mas sencilla para archivos individuales es cambiando la extensión de `.js` a `.mjs`
+
+> Importante: Si en tu codigo estabas usando importaciones con la sintaxis 
+> ```js
+> const cosa = require(cosa)
+> ``` 
+> Al cambiar la extensión a `.mjs` vas a tener que reemplazarlo por 
+> ```js
+> import cosa from 'cosa'
+> ```
+
+Utilizando el codigo el ejemplo que veniamos siguiendo, nuestro resultado final sería
+```js
+try {
+	const usuario = await buscarDatosDeUsuario();
+	const deuda = await buscarDeudasPendientes(usuario.cuil);
+
+	if(deuda.monto == 0){
+		console.log(`No posee deudas. Felicitaciones ${usuario.nombre}`);
+	} else {
+		console.log(`Debe $${deuda.monto}! Muy mal ${usuario.nombre}`);
+	}
+} catch (error) {
+	console.log(`No pudimos recuperar los datos. Razon: ${error}`);
+}
+```
 ## 2 - Manipulando objetos y arrays
 
 #### Objetos
