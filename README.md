@@ -297,6 +297,7 @@ Ahora, acabamos de decir que nuestro javascript ejecuta en un unico hilo, por lo
 Pero nosotros no ejecutamos solo javascript, ejecutamos javascript en un navegador o sobre nodejs y estos poseen un modelo de concurrencia basado en un "loop de eventos". Si bien este modelo es diferente al que estamos acostumbrados en lenguajes como Java y existen varios recursos dedicados a [explicar su funcionamiento](https://www.youtube.com/watch?v=8aGhZQkoFbQ) de momento nos alcanza con saber que es la estrategia para resolver tareas concurrentes.
 
 ### Modelando la asincronía: Promesas con then/catch
+
 En Javascript, una  `Promise` es un objeto que *PUEDE* producir un valor en algun momento futuro. Se utilizan para representar la terminación o el fracaso de una operación asíncrona. Este objeto admite 3 estados: fulfilled (completada), rejected (rechazada), o pending (sin completar) y expone el metodo `then` que se llama cuando la promesa resuelve  y `catch` cuando se rechaza, ambos métodos reciben callbacks como parametros para manejar los datos o el error recibido.
 
 Dado que la mayoría de las personas consumen `promises` ya creadas, empezaremos primero por cómo consumirlas.
@@ -406,6 +407,7 @@ Si estamos utilizando NodeJS a partir de la v14.8 podemos 'saltarnos' esta restr
 > ```
 
 Utilizando el codigo el ejemplo que veniamos siguiendo, nuestro resultado final sería
+
 ```js
 try {
 	const usuario = await buscarDatosDeUsuario();
@@ -420,21 +422,267 @@ try {
 	console.log(`No pudimos recuperar los datos. Razon: ${error}`);
 }
 ```
+
 ## 2 - Manipulando objetos y arrays
 
 #### Objetos
 
-// TODO
+Los objetos en javascript son similar a los mapas de otros lenguajes de programacion, no son mas que una collection de propiedades que asocian un nombre ( o clave ) y un valor. El valor de una propiedad puede ser una función, en cuyo caso la propiedad es conocida como un método.
+
+```js
+// Creando objeto con keyword new (no se suele utilizar)
+const persona1 = new Object
+
+// Creando objeto con notacion de literal
+const persona2 = {}
+
+// Agregando propiedades con notacion '.'
+persona2.nombre = "Ricardo"
+
+// Agregando propiedades con notacion de map
+// Se suele utilizar solo cuando sabemos el nombre de la key durante la ejecución
+persona2["nombre"] = "Ricardo"
+
+
+// Accediendo a los valores de un objeto
+console.log(persona2.nombre) // Imprime: "Ricardo"
+console.log(persona2["nombre"]) // Imprime: "Ricardo"
+
+// Si tratamos de acceder a los valores de un objeto que no existe
+console.log(personaQueNoExiste.nombre) // Imprime: "Uncaught TypeError: Cannot read property 'nombre' of undefined"
+
+//Accediendo a un valores indefinido de un objeto definido
+console.log(persona2.apellido) // Imprime: "undefined"
+
+// Usando la notación de literal podemos asignar valores iniciales
+const persona = {
+	nombre: "Ricardo",
+	apellido: "Sanchez",
+	cuil: 20388888885,
+	intereses: ["programar en javascript", "quejarse de javascript"],
+	prepararCafe: async () => {
+		// TODO: Solucionar coffee leaks...
+	}
+}
+
+```
+
 
 #### Operaciones sobre arrays
 
-// TODO
+Los arrays de javascript proporcionan varios métodos para efectuar operaciones de recorrido y de mutación. Tanto la longitud como el tipo de los elementos de un _array_ son variables.
 
-#### Desestructuracion
+```js
+// Declarando un array
+const frutas = ["Manzana", "Ananá", "Banana", "Pera"];
 
-// TODO
+// Podemos tener cualquier tipo de dato dentro de un array
+const caos = [ "Hola", { nombre: "Ricardo" }, 123123, false, ["Ananá", "Banana"]];
 
-## 3 - Potenciando node
+// Accediendo elementos
+console.log(frutas[0]); // Imprime: "Manzana"
+
+// Logitud de un array - propiedad '.length'
+console.log(frutas.length); // Imprime: 4
+
+// Iterando sobre elementos de un array
+frutas.forEach((elemento, indice, array) => {
+    console.log(`Fruta: ${elemento} - Indice: ${indice}`);
+});
+
+// Copiar un array
+const copiaDeFruta = frutas.slice() 
+
+// Buscar un elemento
+const numeros = [5, 12, 8, 130, 44];
+numeros.find(n => n > 10) // Retorna: 12 
+```
+
+Los arrays de javascript incluyen una api muy potente para operar sobre ellos permitiendo filtrar, ordenar, mapear a otros valores o preguntar sobre los contenidos. Estas operaciones tienen la caracteristica de no modificar el array original, un patrón bastante prevalente en javascript. 
+
+Por ejemplo, en los metodos como `filter` o `map`  que retornan un array, este resultado es nuevo array, el original sigue con todos sus valores intacto. En un principio puede parecer una forma poco performante de operar, desde lo teorico claramente lo es por el overhead extra de crear nuevos objetos, pero desde lo practico es [debatible](https://softwareengineering.stackexchange.com/questions/304574/does-immutability-hurt-performance-in-javascript) el impacto de performance, dificilmente lo notaremos en nuestra apliaciones y los beneficios de eliminar efectos secundarios suelen ser mayores.
+
+##### Map
+Devuelve un nuevo array que contiene el resultado de llamar a la función pasada como parámetro a todos los elementos del array sobre el que se invoca.
+
+```js
+[1, 2, 3].map(x => x * 2) // Retorna: [2, 4, 6]
+```
+
+##### Reduce
+Aplica la función pasada como parámetro a un _acumulador_ y a cada valor del _array_, que se recorre de izquierda a derecha, para reducirlo a un único valor.
+
+```js
+const miArray = [1, 2, 3, 4];
+const reducer = (accumulator, currentValue) => accumulator + currentValue;
+
+miArray.reduce(reducer) // Retorna: 10
+
+// Tambien admite el valor inicial del accumulator como segundo parametro
+miArray.reduce(reducer, 1) // Retorna: 11
+
+```
+
+##### Filter
+Devuelve un nuevo _array_ que contiene todos los elementos de aquél que cumplan el predicado que se le pasa como parámetro.
+
+```js
+const palabras = ["hola", "supercalifragilistico", "oso", "javascript"];
+
+palabras.filter( p => p.length < 4) // Retorna: ["oso"]
+```
+
+##### Some
+Devuelve `true` si al menos un elemento del _array_ cumple con el predicado que se pasa como parámetro.
+
+```js
+const numeros = [1, 2, 3, 4, 5];
+
+const esPar = n => n % 2 === 0;
+
+numeros.some(esPar); // Retorna: true
+```
+##### Every
+Devuelve `true` si todos los elementos del _array_ cumplen el predicado que recibe como parámetro.
+
+```js
+const numeros = [1, 2, 3, 4, 5];
+const pares = [4, 2, 6, 8, 10];
+
+const esPar = n => n % 2 === 0;
+
+numeros.every(esPar); // Retorna: false 
+pares.every(esPar); // Retorna: true 
+```
+
+##### Operaciones que modifican el array original
+
+En javascript tratamos de no modificar variables ya que esta suele ser la fuente de muchos errores, por eso se trata de utilizar `const` donde sea posible y transformar los objetos en nuevos en lugar de mutar los existentes. 
+
+Sin embargo Array tambien incluye algunas apis que modifican el array y las comentamos en esta sección.
+
+```js
+// Añadir un elemento al final de un Array
+frutas.push('Naranja'); // retorna la nueva longitud del array
+
+// Eliminar el ultimo elemento del Array
+frutas.pop(); // retorna la nueva longitud del array
+
+// Añadir un elemento al principio de un Array
+frutas.unshift('Sandia'); // retorna la nueva longitud del array
+
+// Eliminar el primer elemento de un Array
+frutas.shift(); // retorna la nueva longitud del array
+
+// Ordenar un array
+const nums = [1, 20, 3];
+nums.sort()
+console.log(nums) // Imprime: [20, 3, 1]
+
+// Invertir un array
+const nombres = ["Juan", "Carlos", "Ruben"];
+nombres.reverse();
+console.log(nombre) // Imprime: ["Ruben", "Carlos", "Juan"]
+```
+
+#### Desestructuración y Spreads
+
+La sintaxis de `desestructuración` y el operador `...` ( spread ) fueron agregada en ES6 para facilitar operar con arrays y objetos. 
+
+La **desestructuracion** es una expresión de JavaScript que permite 'desempacar' valores de arreglos o propiedades de objetos en distintas variables.
+
+La **sintaxis spread** permite a un elemento iterable tal como un arreglo o cadena sea 'expandido' en lugares donde cero o más argumentos (para llamadas de  función) o elementos (para Array literales) son esperados, o a un objeto ser expandido en lugares donde cero o más pares de valores clave (para literales Tipo Objeto) son esperados
+
+La definición es bastante rebuscada y mas que tratar de dar una mas clara es mejor ver la utilidad que traen consigo
+
+##### Operaciones con Arrays
+
+```js
+// Asignando a: 10 y b: 20
+const numeros = [10, 20];
+let [a, b] = numeros;
+
+console.log(a) // Imprime: 10
+console.log(b) // Imprime: 20
+
+// Intercambiando los valores de a y b
+[a, b] = [b, a]
+
+console.log(a) // Imprime: 20
+console.log(b) // Imprime: 10
+
+// Seleccionando los primeros 2 valores de un array usando spread para copiar el resto de valores
+const muchosNumeros = [10, 20, 30, 40, 50, 60];
+const [primero, segundo, ...resto] = muchosNumeros
+
+console.log(primero) // Imprime: 10
+console.log(segundo) // Imprime: 20
+console.log(resto) // Imprime: [30, 40, 50, 60]
+
+// Copiando un array
+const nuevoArray = [...muchosNumeros]
+
+console.log(nuevoArray) // Imprime: [10, 20, 30, 40, 50, 60]
+console.log(muchosNumeros) // Imprime: [10, 20, 30, 40, 50, 60]
+
+nuevoArray.pop() // Removemos el ultimo elemento de la copia
+
+console.log(nuevoArray) // Imprime: [10, 20, 30, 40, 50]
+console.log(muchosNumeros) // Imprime: [10, 20, 30, 40, 50, 60]
+
+// Agregando elementos al principio un array
+const numeros = [10, 20];
+const masNumeros = [1, ...numeros] // Resultado: [1, 10, 20]
+
+// Agregando elementos al final un array
+const numeros = [10, 20];
+const masNumeros = [...numeros, 1] // Resultado: [10, 20, 1]
+
+// Concatenando arrays
+const array1 = [1, 2];
+const array2 = [5, 4];
+const array3 = [8, 9, 10];
+
+const resultado = [...array1, ...array3, ...array2]; // Resultado: [1, 2, 8, 9, 10, 5, 4]
+```
+
+##### Operaciones con Objetos
+
+```js
+const persona = {
+	nombre: "Ricardo",
+	apellido: "Sanchez",
+	cuil: 20388888885,
+	intereses: ["programar en javascript", "quejarse de javascript"],
+};
+
+// Copiando un objeto
+const personaCopia = {...persona};
+
+// Extrayendo keys del objeto
+const {nombre, intereses} = persona;
+
+console.log(nombre); // Imprime: "Ricardo"
+console.log(intereses); // Imprime: ["programar en javascript", "quejarse de javascript"]
+
+// Crear un nuevo objeto modificando keys pero copiando los demas valores
+const personaNueva = {...persona, nombre: "Juan"};
+
+console.log(persona.nombre); // Imprime: "Ricardo"
+console.log(persona.apellido); // Imprime: "Sanchez"
+console.log(personaNueva.nombre); // Imprime: "Juan"
+console.log(personaNueva.apellido); // Imprime: "Sanchez"
+
+// Crear un nuevo objeto agregando keys pero copiando los demas valores
+const personaNueva = {...persona, copado: true};
+
+console.log(!!personaNueva.copado) // Imprime: true
+console.log(!!persona.copado) // Imprime: false
+```
+
+## 3 - Mi primer proyecto en NodeJS
+
+Durante esta guia venimos utilizando node para lanzar nuestros scripts de javascript, ahora veremos como escalar esta solución a un proyecto que cuenta con multiples archivos y necesita utilizar librerias de terceros.
 
 #### NPM
 
