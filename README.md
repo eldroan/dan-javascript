@@ -8,7 +8,7 @@
 
 Javascript es un lenguaje de programación que ejecuta en todos los browsers.
 
-Por ejemplo, en Chrome podemos utilizar las herramientas de desarrolador para abrir una consola presionando Option + ⌘ +
+Por ejemplo, en Chrome podemos utilizar las herramientas de desarrollador para abrir una consola presionando Option + ⌘ +
 J (macOS), o Shift + CTRL + J (Windows/Linux)
 
 ![imagen de la consola de chrome](imagenes/01-console.png)
@@ -342,9 +342,9 @@ estrategia para resolver tareas concurrentes.
 
 ### Modelando la asincronía: Promesas con then/catch
 
-En Javascript, una  `Promise` es un objeto que *PUEDE* producir un valor en algun momento futuro. Se utilizan para
-representar la terminación o el fracaso de una operación asíncrona. Este objeto admite 3 estados: fulfilled (completada)
-, rejected (rechazada), o pending (sin completar) y expone el método `then` que se llama cuando la promesa resuelve
+En Javascript, una  `Promise` es un objeto que *PUEDE* producir un valor en algún momento futuro. Se utilizan para
+representar la terminación o el fracaso de una operación asíncrona. Este objeto admite 3 estados: fulfilled (completada),
+rejected (rechazada), o pending (sin completar) y expone el método `then` que se llama cuando la promesa resuelve
 y `catch` cuando se rechaza, ambos métodos reciben callbacks como parámetros para manejar los datos o el error recibido.
 
 Dado que la mayoría de las personas consumen `promises` ya creadas, empezaremos primero por cómo consumirlas.
@@ -443,7 +443,7 @@ La keyword `await` funciona haciendo que, de alguna manera, la ejecución del c�
 resuelva y luego continúe retornando el resultado de la promesa.
 
 Sin entrar mucho en los detalles de cómo funciona podemos decir que `await` permite que javascript continue ejecutando
-otros trabajos mientras la ejecución de nuestro código esta suspendido esperando a que se complete la promesa.
+otros trabajos mientras la ejecución de nuestro código está suspendido esperando a que se complete la promesa.
 
 > TIP: No usar el bloque `finally` de un try/catch cuando se utiliza await en promesas. En caso de hacerlo veremos como el bloque finally se ejecutará varias veces, lo cual probablemente no sea el resultado esperado.
 
@@ -1061,8 +1061,8 @@ esperar un par de segundos a que se reflejen.
 #### Agregando Express
 
 Express es el framework web más popular para NodeJS. Proporciona una arquitectura web flexible, minimalista y rápida de
-desarrollar. Además, es la base de un gran número de otros frameworks (ej.: [nest](https://nestjs.com/)
-, [loopback](https://loopback.io/), [sails](https://sailsjs.com/), etc.).
+desarrollar. Además, es la base de un gran número de otros frameworks (ej.: [nest](https://nestjs.com/),
+[loopback](https://loopback.io/), [sails](https://sailsjs.com/), etc.).
 
 Con él podemos construir nuestras API web, permitiendo escribir handlers para los distintos verbos http en diferentes
 endpoints, configurar los puertos en los que responde y agregar “middlewares” a nuestro pipeline para manejar aspectos
@@ -1121,8 +1121,8 @@ handlers. Inmediatamente después, y antes de definir cualquier handler, le pedi
 middleware de parseo de json, ya que sin él no podemos leer el objeto body. Es importante mencionar que el orden es
 importante, es por esto que lo declaramos primero para que se aplique en todas las rutas.
 
-Para asignar un handler es necesario utilizar una función que tiene el nombre del verbo http a manejar (ej.: `get`
-, `post`, `patch`,`put`, `delete`) y recibe como primer parámetro la ruta (en nuestro caso `"/"`) y como segundo
+Para asignar un handler es necesario utilizar una función que tiene el nombre del verbo http a manejar (ej.: `get`,
+`post`, `patch`,`put`, `delete`) y recibe como primer parámetro la ruta (en nuestro caso `"/"`) y como segundo
 parámetro la función que manejará la request.
 
 Opcionalmente entre la ruta y el handler también le podemos pasar un array de “middlewares” que ejecutarán para esa ruta
