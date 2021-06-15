@@ -1,6 +1,8 @@
 # Javascript
 
 > El siguiente texto es una guia teorica-pracitca sobre javascript escrita para la materia de desarrollo de aplicaciones en la nube de la carrera de ingeniería en sistemas de información - UTN FRSF
+>
+> [Leer o descargar la versión en PDF](teoria.pdf)
 
 ## Intro
 
@@ -797,8 +799,384 @@ const dayjs = require("dayjs");
 
 ## 4 - API usando NodeJS y Express
 
-#### Express
+#### Preparación de proyecto
 
-#### Reiniciando nuestro servidor local cuando se modifican archivos
+> Esta sección explica como inicializar un proyecto de node con vscode. Algunos puntos ya los vimos anteriormente pero se va a repetir para que sirva de punto de referencia.
 
-//TODO
+Creamos una carpeta  para almacenar nuestro proyecto, se recomienda utilizar `kebab-case` para este nombre. 
+
+```bash
+$ mkdir node-express && node-express
+```
+
+Inicializamos un proyecto de npm con las opciones por default, usando la opcion `-y`
+
+```bash
+$ npm init -y
+```
+
+Abrir nuestro `package.json` que acabamos de generar y agregarle la propiedad  `"type": "module"` resultando en algo similar a 
+
+```json
+{
+  "name": "node-express",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+
+```
+
+> Recordemos que al setear el tipo de nuestro proyecto como `module` deberemos utilizar la sintaxis de **import** en lugar de **require**
+
+Generamos el archivo `index.js` que sera el punto de entrada en nuestra aplicación
+
+```bash
+$ touch index.js
+```
+
+Generamos una configuración para ejecutar el debugger de vscode y poder utilizar breakpoints en nuestro codigo desde el editor. Para esto vscode utiliza un archivo llamado `launch.json` que debe existir en una carpeta `.vscode` que por default no existen.
+
+```bash
+$ mkdir .vscode && cd .vscode
+$ touch launch.json && cd ..
+```
+
+Desde vscode ahora abrimos el archivo `launch.json` y pegamos la siguiente config
+
+```json
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Launch Node",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/index.js"
+    }
+  ]
+}
+
+```
+
+Ahora podemos agregar breakpoints en nuestro ide y landar el modo debug presionando `F5`.
+
+#### Reiniciando nuestra aplicación cuando se modifican archivos
+
+Cuando estemos utilizando express resultara bastante incomodo tener que finalizar nuestra app para probar los nuevos cambios. Nodemon es una herramienta que realiza este trabajo por nosotros, al detectar archivos modificados, nodemon finaliza el proceso actual y lo vuelve a lanzar. Esto nos permite iterar mucho más rápido.
+
+Nodemos es una dependencia necesaria solo en tiempo de desarrollo, es por esto que la instalamos de la siguiente manera
+
+```bash
+$ npm i nodemon -D
+```
+
+Esto nos agregará una entrada al package json similar al siguiente
+```json
+  ...
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+  ...
+```
+
+Con nodemon instalado podriamos ejecutar nuestra app utilizando `nodemon index.js` en lugar de `node index.js` pero una mejor solución seria modificar el archivo `launch.json` de .vscode para que lo haga por nosotros al lanzar el debugger. PAra esto tenemos que agregar la siguiente linea dentro del array de `"configurations"`
+
+```json
+"runtimeExecutable": "${workspaceFolder}/node\_modules/nodemon/bin/nodemon.js",
+```
+
+El archivo `launch.json` completo quedaria de la siguiente manera
+
+```json
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Launch Node",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/nodemon/bin/nodemon.js",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/index.js"
+    }
+  ]
+}
+
+```
+
+Y ahora al ejecutar nuestra aplicación con `F5` y realicemos cambios no será necesario detenerla, tan solo hay que esperar un par de segundos a que se reflejen.
+
+#### Agregando Express
+
+Express es el framework web más popular para NodeJS. Proporciona una arquitectura web flexible, minimalista y rápida de desarrollar. Ademas, es la base de un grán número de otros frameworks (ej: [nest](https://nestjs.com/), [loopback](https://loopback.io/), [sails](https://sailsjs.com/), etc...).
+
+Con el podemos construir nuestras APIs web, permitiendo escribir handlers para los distintos verbos http en diferentes endpoints, configurar los puertos en los que responde y agregar 'middlewares' a nuestro pipeline para manejar aspectos cross como logging, autorización y autenticación de nuestras rutas.
+
+Lo primero a realizar es agregar la dependencia de express
+
+```bash
+$ npm i express
+```
+
+Esto nos agregará a nuestro package json la versión mas reciente de express al momento de ejecución, por ejemplo
+
+```json
+	...resto de package.json...
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  	...resto de package.json...
+```
+
+Desde nuestro index.js necesitamos importarlo e inicializarlo llamando a `express()`, esta llamada retorna un objeto que es el que usaremos para definir nuestras rutas y arrancar nuestra aplicación.
+
+Veamos como ejemplo un hola mundo utilizando express
+
+```js
+import express from "express";
+
+const app = express();
+
+// Agregamos un 'middleware' para parsear json en todas las rutas.
+// Sin el no podemos acceder al body de una request.
+app.use(express.json());
+
+app.post("/saludame", (req, res) => {
+  const nombre = req.body.nombre ?? "Desconocido";
+  res.status(200).send(`Hola ${nombre}$!`);
+});
+
+app.get("/", (req, res) => {
+  res.status(200).send("Hola Mundo!");
+});
+
+const port = 3000;
+app.listen(port, () => {
+  console.log(`Example app listening at http://localhost:${port}`);
+});
+
+```
+
+Luego de inicializar express lo asignamos a la variable app  `app` a la cual podemos asignarle nuestros distintos handlers. Inmediatamente despues, y antes de definir cualquier handler, le pedimos a nuestra app que utilice el middleware de parseo de json ya que sin el no podemos leer el objeto body. Es importante mencionar que el orden es importante, es por esto que lo declaramos primero para que se aplique en todas las rutas.
+
+Para asignar un handler es necesario utilizar una función que tiene el nombre del verbo http a manejar (ej: `get`, `post`, `patch`,`put`, `delete`) y recibe como primer parametro la ruta ( en nuestro caso `"/"` ) y como segundo parametro la función que manejará la request. 
+
+Opcionalmente entre la ruta y el handler tambien le podemos pasar un array de 'middlewares' que ejecutaran para esa ruta en orden, antes del handler, pudiendo incluso finalizar la request sin dejarla continuar. Estos suelen utilizarse para manejar autenticación, autorización, logging o sanitizado de inputs.
+
+Finalmente, para que nuestro servidor express pueda quedarse esperando peticiones, es necesario ejecutar el metodo `.listen(port)` que recibe de parametro el puerto en donde escuchará peticiones y opcionalmente un callback que ejecutará cuando esté listo.
+
+```
+app.listen(port, () => {
+  console.log(`Example app listening at http://localhost:${port}`);
+});
+```
+
+##### Definiendo rutas
+
+Cuando recibimos una request a nuestra api, luego de la dirección y el puerto, comienza la ruta del recurso que se está tratando de acceder. Para decirle a express quien tiene que responder a esta llamada es que tenemos que definir una ruta.
+
+Al momento de definir una ruta para representar el string exacto (ej: `/api/saludo`) o definir una variable que utilice parametros de ruta (ej: `/api/:nombre`), en este caso el valor de `:nombre` va a corresponder a cualquier string que se envie luego de `/api/`, incluso `saludo`. Para evitar problemas tenemos que tener en cuenta lo siguiente:
+
+```
+El orden en que agregamos las rutas es importante, dado un request para un verbo http particular, express le entregara la respuesta al primer handler de ese verbo que matchee con la ruta.
+```
+
+Es por esto que con nuestro ejemplo, suponiendo que ambas rutas son para el mismo verbo, deberíamos definir primero `/api/saludo` y luego `/api/:nombre` para evitar que esta ultima maneje todos los request.
+
+##### Definiendo funciones handlers
+
+Un handler de express es una funcion con la siguiente estructura
+
+```js
+const handler = (req, res) => {
+	// Mi logica
+	// ...
+}
+```
+
+> Por convención estos dos parametros se llaman req y res pero no hay nada que enfuerze que efectivamente se llamen asi. Lo que sí es importante es no confundirlos de lugar.
+
+###### Leyendo datos de la request con req
+`req` es el objeto que utiliza nuestro servidor express cuando recibe datos de la llamada del cliente. Estos pueden llegar de tres maneras `req.params`, `req.body` y `req.query`.
+
+El objeto `req.params` captura los datos basado en los parametros de la ruta, si por ejemplo definimos una ruta como `/api/:nombre` y llega una request cuyo path es `/api/ricardo` podemos recuperar ese valor de la siguiente manera
+
+```js
+req.params.nombre // Retorna: ricardo
+```
+
+El objeto `req.query` captura los datos basado en querystrings de la request, si por ejemplo definimos una ruta como `/api/saludar` y llega una request cuyo path es `/api/saludar?nombre=ricardo&apellido=sanchez` podemos recuperar estos valores de la siguiente manera
+
+```js
+req.params.nombre // Retorna: ricardo
+req.params.apellido // Retorna: sanchez
+```
+
+El objeto `req.body` captura los datos basado en body de la request, si por ejemplo definimos una ruta como `/api/saludar` y llega una request que contiene un body de la siguiente forma
+
+```json
+{
+	"nombre": "ricardo",
+	"apellido": "sanchez"
+}
+```
+
+Podemos recuperar estos valores de la siguiente manera
+
+```js
+req.body.nombre // Retorna: ricardo
+req.body.apellido // Retorna: sanchez
+```
+
+[req](http://expressjs.com/es/api.html#req) contiene bastante más información sobre la request actual, por ejemplo utilizando `req.header(...)` podemos consultar el valor de algun header particular, conveniente para cuando utilizamos autorización por jwt, podemos recuperar el token simplemente llamando a  `req.header('Authorization')`. 
+
+###### Devolviendo respuestas con res
+`res` es el objeto que prepara la respuesta http que nuestra api en express enviará al cliente luego de recibir una request.
+
+Podemos utilizar este objeto para setear los headers a retornar, por ejemplo:
+
+```js
+res.set('Content-Type', 'application/json; charset=utf-8');
+```
+
+Ademas, podemos definir el [codigo de estado de la respuesta](https://developer.mozilla.org/es/docs/Web/HTTP/Status) que en caso de no hacerlo, por default, será `200`. Ejemplo:
+
+```js
+res.status(500)
+```
+
+Finalmente podemos indicarle a express que queremos retornar mediante el método `send(...)` indicandole como argumento el valor de la respuesta, por ejemplo
+
+```js
+... codigo de mi handler
+
+if (error) {
+	res.status(500).send({mensaje: "Algo salio mal :c"});
+} else {
+	res.send({nombre: "ricardo", apellido: "sanchez"});
+}
+```
+
+Sin importar el resultado de la request hay algo que tenemos que tener en cuenta al escribir nuestros handlers y es lo siguiente:
+
+```
+Siempre tenemos que devolver una respuesta, aunque sea de error, sino el cliente quedará esperando hasta finalizar la llamada por timeout en el mejor de los casos.
+```
+
+##### Definiendo middlewares
+
+Los middlewares son bastante similares a los handles pero agregan un parametro extra convencionalmente llamado `next`. Son funciones de la siguiente forma
+
+```js
+const middleware = (req, res, next) => {
+	// Mi logica
+	// ...
+}
+```
+
+Las funciones de middleware pueden realizar las siguientes tareas:
+
+-   Ejecutar cualquier código.
+-   Realizar cambios en la solicitud y los objetos de respuesta.
+-   Finalizar el ciclo de solicitud/respuestas.
+-   Invocar la siguiente función de middleware en la pila.
+
+Ejecutar una llamada a `next()` continua la ejecución del siguiente middleware, o si ya no quedan middlewares, el handler. 
+
+Un middleware sencillo puede ser uno que loguee en consola las llamadas que recibe, por ejemplo
+
+```js
+const logger = (req, res, next) => {
+	console.log('Request Path:', req.path);
+	console.log('Request Type:', req.method);
+	console.log('Request Time:', Date.now());
+	console.log('---------------------------');
+	next();
+}
+```
+
+Uno un poco mas complejo podría bloquear llamadas no autenticadas, por ejemplo
+
+```js
+const auth = (req, res, next) => {
+	const authorization = req.header('Authorization');
+	if (!!authorization && isValidToken(authorization)) {
+		next();
+	} else {
+		res.status(401).send({mensaje: "No se encuentra logueado o su sesión expiro, vuelva a intentarlo."})
+	}
+}
+```
+
+Una vez que tenemos definido nuestro middleware es necesario decidir **en que momento de la request debe ejecutarse**. 
+
+Por ejemplo, anteriormente definimos:
+
+```js
+app.use(express.json());
+```
+
+Es mediante el metodo `.use(...)` es que agregamos el middleware de `express.json()` para todas las request. Pero solo afecta a todas las request porque antes de el no hay ningun handler definido, todos estan definidos luego de agregar este middleware. Si hubieramos definido un handler para `POST` antes del middleware no hubieramos podido decodificar el body de la request y al tratar de obtener `req.body` obtendriamos siempre `undefined`
+
+Ademas, como ya comentamos, es posible agregar middlewares a nivel de handler, veamos este ejemplo
+
+```js
+import express from "express";
+const app = express();
+
+app.use(express.json());
+
+const logger = (req, res, next) => {
+	console.log('Request Path:', req.path);
+	console.log('Request Type:', req.method);
+	console.log('Request Time:', Date.now());
+	console.log('---------------------------');
+	next();
+}
+
+const auth = (req, res, next) => {
+	const authorization = req.header('Authorization');
+	if (!!authorization && isValidToken(authorization)) {
+		next();
+	} else {
+		res.status(401).send({mensaje: "No se encuentra logueado o su sesión expiro, vuelva a intentarlo."})
+	}
+}
+
+// Agregamos ambos middlewares al handler
+app.post("/saludame", [logger, auth], (req, res) => {
+  const nombre = req.body.nombre ?? "Desconocido";
+  res.status(200).send(`Hola ${nombre}$!`);
+});
+
+// No agregamos ningun middleware
+app.get("/saludame", (req, res) => {
+  res.status(200).send(`Hola!`);
+});
+
+
+const port = 3000;
+app.listen(port, () => {
+  console.log(`Example app listening at http://localhost:${port}`);
+});
+
+```
+
+En este caso un `post` a `/saludame` ejecutara primero el middleware de parseo de json, luego el de logger, luego el de auth y finalmente, si la request llego con un token valido en los headers, el handler.
+
+Pero para las request `get` a `/saludame` solo estamos pasando por el middleware de jsons, el cual no deberia hacer nada ya que los get normalmente no tienen `body` y llegamos al handler.
